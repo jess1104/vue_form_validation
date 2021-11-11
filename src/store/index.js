@@ -7,21 +7,41 @@ export default new Vuex.Store({
   state: {
     account: {
       text: "",
-      isValid: true,
+      isValid: null,
     },
     password: {
       text: "",
-      isValid: true,
+      isValid: null,
     },
     confirmPass: {
       text: "",
+      isValid: null,
+    },
+    name: {
+      text: "",
+      isValid: null,
+    },
+    email: {
+      text: "",
       isValid: true,
     },
-
-    name: "",
     gender: "",
-    genderOption: ["男", "女"],
-    emailText: "",
+    genderOption: ["男", "女", "中"],
+  },
+  getters: {
+    allValid(state) {
+      let arr = [
+        state.account.isValid,
+        state.password.isValid,
+        state.confirmPass.isValid,
+        state.name.isValid,
+        state.email.isValid,
+      ];
+
+      return arr.every((validValue) => {
+        return validValue === true;
+      });
+    },
   },
   mutations: {
     SET_VALID_ACCOUNT(state, boolean) {
@@ -42,10 +62,24 @@ export default new Vuex.Store({
     SET_CONFIRM_TEXT(state, newConfirm) {
       state.confirmPass.text = newConfirm;
     },
+    SET_VALID_NAME(state, boolean) {
+      state.name.isValid = boolean;
+    },
+    SET_NAME_TEXT(state, newName) {
+      state.name.text = newName;
+    },
+    SET_GENDER(state, genderRes) {
+      state.gender = genderRes;
+    },
+    SET_VALID_MAIL(state, boolean) {
+      state.email.isValid = boolean;
+    },
+    SET_MAIL_TEXT(state, newMail) {
+      state.email.text = newMail;
+    },
   },
   actions: {
     setValidAccount({ commit }, boolean) {
-      console.log(boolean);
       commit("SET_VALID_ACCOUNT", boolean);
     },
     setAccountText({ commit }, newAccount) {
@@ -63,6 +97,20 @@ export default new Vuex.Store({
     setConfirmText({ commit }, newConfirm) {
       commit("SET_CONFIRM_TEXT", newConfirm);
     },
+    setValidName({ commit }, boolean) {
+      commit("SET_VALID_NAME", boolean);
+    },
+    setNameText({ commit }, newName) {
+      commit("SET_NAME_TEXT", newName);
+    },
+    setGender({ commit }, genderRes) {
+      commit("SET_GENDER", genderRes);
+    },
+    setValidMail({ commit }, boolean) {
+      commit("SET_VALID_MAIL", boolean);
+    },
+    setMailText({ commit }, newMail) {
+      commit("SET_MAIL_TEXT", newMail);
+    },
   },
-  modules: {},
 });
