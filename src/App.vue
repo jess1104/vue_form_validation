@@ -7,7 +7,7 @@
         icon="person"
         placeholder="請輸入帳號"
         help="需輸入4-20碼英文小寫及數字"
-        error="帳號必填，需介於4-20碼之間的英文小寫與數字"
+        :error="account.error"
         :invalid="account.isValid === false"
         :maxlength="20"
         @input="onAccountInput"
@@ -24,12 +24,12 @@
         error="密碼必填，需介於6-20碼之間的英文小寫與數字"
         :invalid="password.isValid === false"
         :maxlength="20"
-        @input="validPassword"
+        @input="onPasswordInput"
         :value="password.text"
         :disabled="submitted"
       ></ui-textbox>
       <!-- 確認密碼 -->
-      <ui-textbox
+      <!-- <ui-textbox
         label="確認密碼"
         icon="lock"
         type="password"
@@ -38,12 +38,12 @@
         error="必填，需與密碼相同"
         :invalid="confirmPass.isValid === false"
         :maxlength="20"
-        @input="validConfirmPass"
+        @input="onConfirmPassInput"
         :value="confirmPass.text"
         :disabled="submitted"
-      ></ui-textbox>
+      ></ui-textbox> -->
       <!-- 姓名 -->
-      <ui-textbox
+      <!-- <ui-textbox
         label="姓名"
         icon="face"
         placeholder="請輸入姓名"
@@ -74,7 +74,7 @@
         :value="email.text"
         :disabled="submitted"
       ></ui-textbox>
-      <ui-button color="green" @click="submit(allValid)"> 送出 </ui-button>
+      <ui-button color="green" @click="submit(allValid)"> 送出 </ui-button> -->
     </div>
     <ul class="content" v-if="submitted">
       <li>客戶資料:</li>
@@ -110,74 +110,50 @@ export default {
     ...mapGetters(["allValid"]),
   },
   methods: {
-    ...mapActions([
-      "setAccount",
-      "setValidPassword",
-      "setPasswordText",
-      "setValidConfirmPass",
-      "setConfirmText",
-      "setValidName",
-      "setNameText",
-      "setGender",
-      "setValidMail",
-      "setMailText",
-    ]),
-    onAccountInput(value) {
-      this.setAccount({
-        boolean: false,
-        account: value,
-        error: "字數有誤，需輸入4-20碼",
-      });
+    ...mapActions(["setAll"]),
 
+    onAccountInput(value) {
+      let payload = { account: { value, result: null } };
+      this.setAll(payload);
       // 判斷長度及有無輸入
       if (value.length > 20 || value.length < 4) {
-        this.setAccount({
-          boolean: false,
-          newAccount: value,
-          error: "字數有誤，需輸入4-20碼",
-        });
-        return;
-      }
-      // 判斷正則英文與數字
-      let accountTest = /^[a-z0-9]+$/;
-      this.setAccount({
-        boolean: accountTest.test(value),
-        newAccount: value,
-        error: "內容有誤，僅可輸入英文小寫及數字",
-      });
-      if (/^[a-z0-9]+$/.test(value)) {
-        this.setAccount({
-          boolean: true,
-          account: value,
-          error: "字數有誤，需輸入4-20碼",
-        });
-      }
-      this.setAccount({
-        boolean: false,
-        newAccount: value,
-        error: "需輸入英文小寫或數字",
-      });
-    },
-    validPassword(value) {
-      this.setPasswordText(value);
-
-      // 判斷長度及有無輸入
-      if (value.length > 20 || value.length < 6) {
-        this.setValidPassword(false);
+        let payload = { account: { value, result: false } };
+        this.setAll(payload);
         return;
       }
       // 判斷正則英文與數字
       if (/^[a-z0-9]+$/.test(value)) {
-        this.setValidPassword(true);
+        let payload = { account: { value, result: true } };
+        this.setAll(payload);
       } else {
-        this.setValidPassword(false);
+        let payload = { account: { value, result: false } };
+        this.setAll(payload);
       }
+    },
+    onPasswordInput(value) {
+      let payload = { method: "password", value, result: null };
+      this.setAll(payload);
       // 判斷有重新修改密碼後
       if (value !== this.confirmPass.text) {
-        this.setValidConfirmPass(false);
+        let payload = { method: "password", value, result: false };
+        this.setAll(payload);
+      }
+      // 判斷長度及有無輸入
+      if (value.length > 20 || value.length < 6) {
+        let payload = { method: "password", value, result: false };
+        this.setAll(payload);
+        return;
+      }
+      // 判斷正則英文與數字
+      if (/^[a-z0-9]+$/.test(value)) {
+        let payload = { method: "password", value, result: true };
+        this.setAll(payload);
+      } else {
+        let payload = { method: "password", value, result: false };
+        this.setAll(payload);
       }
     },
-    validConfirmPass(value) {
+    onConfirmPassInput(value) {
       this.setConfirmText(value);
       // 與密碼相符發action
       if (value === this.password.text) {
