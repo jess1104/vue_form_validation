@@ -1,36 +1,38 @@
 <template>
   <div id="app" class="app">
-    <form>
+    <div class="form">
       <!-- 帳號 -->
       <ui-textbox
         label="帳號"
         icon="person"
         placeholder="請輸入帳號"
         help="需輸入4-20碼英文小寫及數字"
-        error="帳號必填，需介於4-20碼之間的英文與數字"
+        error="帳號必填，需介於4-20碼之間的英文小寫與數字"
         :invalid="account.isValid === false"
         :maxlength="20"
-        @input="validAccount"
+        @input="onAccountInput"
         :value="account.text"
-        :disabled="submitVal"
+        :disabled="submitted"
       ></ui-textbox>
       <!-- 密碼 -->
       <ui-textbox
         label="密碼"
         icon="lock"
+        type="password"
         placeholder="請輸入密碼"
         help="需輸入6-20碼英文小寫及數字"
-        error="密碼必填，需介於6-20碼之間的英文與數字"
+        error="密碼必填，需介於6-20碼之間的英文小寫與數字"
         :invalid="password.isValid === false"
         :maxlength="20"
         @input="validPassword"
         :value="password.text"
-        :disabled="submitVal"
+        :disabled="submitted"
       ></ui-textbox>
       <!-- 確認密碼 -->
       <ui-textbox
         label="確認密碼"
         icon="lock"
+        type="password"
         placeholder="請確認密碼"
         help="需與密碼相同"
         error="必填，需與密碼相同"
@@ -38,7 +40,7 @@
         :maxlength="20"
         @input="validConfirmPass"
         :value="confirmPass.text"
-        :disabled="submitVal"
+        :disabled="submitted"
       ></ui-textbox>
       <!-- 姓名 -->
       <ui-textbox
@@ -50,7 +52,7 @@
         :invalid="name.isValid === false"
         @input="validName"
         :value="name.text"
-        :disabled="submitVal"
+        :disabled="submitted"
       ></ui-textbox>
       <ui-select
         label="性別"
@@ -59,24 +61,23 @@
         :options="genderOption"
         @change="changeGender"
         :value="gender"
-        :disabled="submitVal"
+        :disabled="submitted"
       ></ui-select>
       <ui-textbox
         label="信箱"
         icon="mail"
         placeholder="請輸入信箱"
         help="請輸入電子信箱"
-        error="選填，不可輸入數字、空白及特殊符號"
+        error="選填，請輸入正確的e-mail"
         :invalid="email.isValid === false"
         @input="validMail"
         :value="email.text"
-        :disabled="submitVal"
+        :disabled="submitted"
       ></ui-textbox>
-      <ui-button color="green" @click.prevent="submit(allValid)"
-        >送出</ui-button
-      >
-    </form>
-    <ul class="content" v-if="submitVal">
+      <ui-button color="green" @click="submit(allValid)"> 送出 </ui-button>
+    </div>
+    <ul class="content" v-if="submitted">
+      <li>客戶資料:</li>
       <li>帳號:{{ account.text }}</li>
       <li>密碼:{{ password.text }}</li>
       <li>姓名:{{ name.text }}</li>
@@ -92,7 +93,7 @@ export default {
   name: "App",
   data() {
     return {
-      submitVal: null,
+      submitted: null,
     };
   },
   computed: {
@@ -105,12 +106,12 @@ export default {
       "genderOption",
       "email",
     ]),
+    // 所有的有效判斷結果
     ...mapGetters(["allValid"]),
   },
   methods: {
     ...mapActions([
-      "setValidAccount",
-      "setAccountText",
+      "setAccount",
       "setValidPassword",
       "setPasswordText",
       "setValidConfirmPass",
@@ -121,20 +122,41 @@ export default {
       "setValidMail",
       "setMailText",
     ]),
-    validAccount(value) {
-      this.setAccountText(value);
+    onAccountInput(value) {
+      this.setAccount({
+        boolean: false,
+        account: value,
+        error: "字數有誤，需輸入4-20碼",
+      });
 
       // 判斷長度及有無輸入
       if (value.length > 20 || value.length < 4) {
-        this.setValidAccount(false);
+        this.setAccount({
+          boolean: false,
+          newAccount: value,
+          error: "字數有誤，需輸入4-20碼",
+        });
         return;
       }
       // 判斷正則英文與數字
+      let accountTest = /^[a-z0-9]+$/;
+      this.setAccount({
+        boolean: accountTest.test(value),
+        newAccount: value,
+        error: "內容有誤，僅可輸入英文小寫及數字",
+      });
       if (/^[a-z0-9]+$/.test(value)) {
-        this.setValidAccount(true);
-      } else {
-        this.setValidAccount(false);
+        this.setAccount({
+          boolean: true,
+          account: value,
+          error: "字數有誤，需輸入4-20碼",
+        });
       }
+      this.setAccount({
+        boolean: false,
+        newAccount: value,
+        error: "需輸入英文小寫或數字",
+      });
     },
     validPassword(value) {
       this.setPasswordText(value);
@@ -157,16 +179,16 @@ export default {
     },
     validConfirmPass(value) {
       this.setConfirmText(value);
-      // 確認有無輸入
-      if (value.length === 0) {
-        this.setValidConfirmPass(false);
-        return;
-      }
       // 與密碼相符發action
       if (value === this.password.text) {
         this.setValidConfirmPass(true);
       } else {
         this.setValidConfirmPass(false);
+      }
+      // 確認有無輸入
+      if (value.length === 0) {
+        this.setValidConfirmPass(false);
+        return;
       }
     },
     validName(value) {
@@ -203,7 +225,7 @@ export default {
     },
     submit(value) {
       // console.log("allValid:" + value);
-      this.submitVal = value;
+      this.submitted = value;
     },
   },
 };
@@ -228,9 +250,7 @@ html {
   margin: 0 auto;
   margin-top: 50px;
   padding: 10px;
-
   list-style: none;
-
   background: #4caf50;
   border-radius: 10px;
   color: #fff;
@@ -238,6 +258,9 @@ html {
 }
 li {
   padding: 10px;
+}
+li:first {
+  font-size: 20px;
 }
 
 .app {
@@ -247,7 +270,7 @@ li {
   text-align: center;
   color: #2c3e50;
 }
-form {
+.form {
   width: 50%;
   margin: 0 auto;
 }
