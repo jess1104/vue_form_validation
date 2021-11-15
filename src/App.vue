@@ -4,7 +4,7 @@
             <template v-for="form in forms">
                 <!-- textbox -->
                 <ui-textbox
-                    v-if="form.type == 'textbox'"
+                    v-if="form.type === 'textbox'"
                     :key="form.alias"
                     :label="form.label"
                     :icon="form.icon"
@@ -13,28 +13,30 @@
                     :error="form.error"
                     :type="form.showType"
                     :invalid="form.isValid === false"
-                    @input="validForm(form.alias, $event)"
+                    @input="inputForm(form.alias, $event)"
                     :value="form.value"
                     :disabled="submitted"
                 ></ui-textbox>
                 <!-- select -->
                 <ui-select
-                    v-else-if="form.type == 'select'"
+                    v-else-if="form.type === 'select'"
                     :key="form.alias"
                     :label="form.label"
                     :icon="form.icon"
                     :placeholder="form.placeholder"
                     :options="form.option"
-                    @input="validSelect(form.alias, $event)"
+                    @input="inputSelect(form.alias, $event)"
                     :value="form.value"
                     :disabled="submitted"
                 ></ui-select>
             </template>
-            <ui-button color="green" @click.prevent="submit(forms)"> 送出 </ui-button>
+            <ui-button color="green" @click.prevent="submit"> 送出 </ui-button>
         </div>
         <ul class="content" v-if="submitted">
             <template v-for="form in forms">
-                <li v-if="form.type === 'textbox'" :key="form.alias">{{ form.label }} : {{ form.value }}</li>
+                <li v-if="form.type === 'textbox' && form.value.length > 0" :key="form.alias">
+                    {{ form.label }} : {{ form.value }}
+                </li>
                 <li v-else-if="form.type === 'select'" :key="form.alias">
                     {{ form.label }} : {{ form.value.label }}
                 </li>
@@ -57,17 +59,16 @@ export default {
     },
     methods: {
         ...mapActions(["setForm"]),
-        validForm(alias, value) {
-            const aliasData = this.forms.find((item) => item.alias == alias);
+        inputForm(alias, value) {
+            const aliasData = this.forms.find((item) => item.alias === alias);
             this.setForm({
                 alias: alias,
                 valid: true,
                 value: value,
             });
             // 密碼修改又需驗證
-            const confirmData = this.forms.find((item) => item.alias == "confirmPass");
-            // console.log(aliasData.alias);
-            if (aliasData.alias === "confirmPass") {
+            const confirmData = this.forms.find((item) => item.alias === "confirmPass");
+            if (aliasData.alias === "password") {
                 if (aliasData.value !== confirmData.value && confirmData.value.length > 0) {
                     this.setForm({
                         alias: confirmData.alias,
@@ -79,7 +80,7 @@ export default {
             }
             //先驗證
             aliasData.tests.forEach((element) => {
-                if (element.testType == "length") {
+                if (element.testType === "length") {
                     //長度驗證
                     if (value.length > element.props.maxlen || value.length < element.props.minlen) {
                         this.setForm({
@@ -89,7 +90,7 @@ export default {
                             value: value,
                         });
                     }
-                } else if (element.testType == "reg") {
+                } else if (element.testType === "reg") {
                     //正則驗證
                     const doTest = new RegExp(element.test).test(value);
                     if (!doTest) {
@@ -105,7 +106,6 @@ export default {
                 // 確認密碼驗證
                 if (element.testType === "confirmPas") {
                     const passwordData = this.forms.find((item) => item.alias === "password");
-                    // console.log(passwordData.value);
                     if (value !== passwordData.value || value.length <= 0) {
                         this.setForm({
                             alias: alias,
@@ -127,19 +127,17 @@ export default {
                 }
             }
         },
-        validSelect(alias, value) {
+        inputSelect(alias, value) {
             this.setForm({
                 alias: alias,
                 value: value,
             });
         },
-        submit(value) {
+        submit() {
             this.forms.forEach((item) => {
-                this.validForm(item.alias, item.value);
+                this.inputForm(item.alias, item.value);
             });
             const inValids = this.forms.filter((item) => item.isValid != true); // array
-            console.log(inValids.length);
-            console.log(value);
             // 全部驗證過為空陣列
             if (inValids.length === 0) {
                 this.submitted = true;
