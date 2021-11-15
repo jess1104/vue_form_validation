@@ -30,15 +30,11 @@
                     :disabled="submitted"
                 ></ui-select>
             </template>
-            <ui-button color="green" @click.prevent="submit(forms)">
-                送出
-            </ui-button>
+            <ui-button color="green" @click.prevent="submit(forms)"> 送出 </ui-button>
         </div>
         <ul class="content" v-if="submitted">
             <template v-for="form in forms">
-                <li v-if="form.type === 'textbox'" :key="form.alias">
-                    {{ form.label }} : {{ form.value }}
-                </li>
+                <li v-if="form.type === 'textbox'" :key="form.alias">{{ form.label }} : {{ form.value }}</li>
                 <li v-else-if="form.type === 'select'" :key="form.alias">
                     {{ form.label }} : {{ form.value.label }}
                 </li>
@@ -68,14 +64,24 @@ export default {
                 valid: true,
                 value: value,
             });
+            // 密碼修改又需驗證
+            const confirmData = this.forms.find((item) => item.alias == "confirmPass");
+            // console.log(aliasData.alias);
+            if (aliasData.alias === "confirmPass") {
+                if (aliasData.value !== confirmData.value && confirmData.value.length > 0) {
+                    this.setForm({
+                        alias: confirmData.alias,
+                        valid: false,
+                        error: confirmData.error,
+                        value: confirmData.value,
+                    });
+                }
+            }
             //先驗證
             aliasData.tests.forEach((element) => {
                 if (element.testType == "length") {
                     //長度驗證
-                    if (
-                        value.length > element.props.maxlen ||
-                        value.length < element.props.minlen
-                    ) {
+                    if (value.length > element.props.maxlen || value.length < element.props.minlen) {
                         this.setForm({
                             alias: alias,
                             valid: false,
@@ -85,7 +91,7 @@ export default {
                     }
                 } else if (element.testType == "reg") {
                     //正則驗證
-                    const doTest = new RegExp(element.test, "i").test(value);
+                    const doTest = new RegExp(element.test).test(value);
                     if (!doTest) {
                         this.setForm({
                             alias: alias,
@@ -95,28 +101,10 @@ export default {
                         });
                     }
                 }
-                // 密碼修改又需驗證
-                if (aliasData.alias === "password") {
-                    // console.log(aliasData.value);
-                    const confirmData = this.forms.find(
-                        (item) => item.alias == "confirmPass"
-                    );
-                    // console.log(confirmData.value);
-                    if (aliasData.value !== confirmData.value) {
-                        this.setForm({
-                            alias: confirmData.alias,
-                            valid: false,
-                            error: confirmData.error,
-                            value: confirmData.value,
-                        });
-                    }
-                }
 
                 // 確認密碼驗證
                 if (element.testType === "confirmPas") {
-                    const passwordData = this.forms.find(
-                        (item) => item.alias === "password"
-                    );
+                    const passwordData = this.forms.find((item) => item.alias === "password");
                     // console.log(passwordData.value);
                     if (value !== passwordData.value || value.length <= 0) {
                         this.setForm({
@@ -127,17 +115,17 @@ export default {
                         });
                     }
                 }
-                //當信箱不輸入也可為true
-                if (aliasData.alias === "mail") {
-                    if (aliasData.value.length === 0) {
-                        this.setForm({
-                            alias: alias,
-                            valid: true,
-                            value: value,
-                        });
-                    }
-                }
             });
+            //當信箱不輸入也可為true
+            if (aliasData.alias === "mail") {
+                if (aliasData.value.length === 0) {
+                    this.setForm({
+                        alias: alias,
+                        valid: true,
+                        value: value,
+                    });
+                }
+            }
         },
         validSelect(alias, value) {
             this.setForm({
