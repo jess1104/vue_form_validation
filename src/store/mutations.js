@@ -5,6 +5,8 @@ export default {
         );
         state.forms[formIndex]["isValid"] = payload.valid;
         state.forms[formIndex]["value"] = payload.value;
-        state.form[formIndex]["error"] = !payload.valid ? payload.error : "";
+        state.forms[formIndex]["error"] = !payload.valid ? payload.error : "";
+
+        // console.log(payload.disabled);
     },
 };

@@ -1,7 +1,7 @@
 export default {
     forms: [
         {
-            uiType: "textbox",
+            type: "textbox",
             alias: "account",
             label: "帳號",
             icon: "person",
@@ -9,8 +9,8 @@ export default {
             placeholder: "請輸入帳號",
             help: "需輸入4-20碼英文小寫及數字",
             isValid: null,
-            disabled: false,
             error: "",
+
             tests: [
                 {
                     testType: "length",
@@ -28,53 +28,44 @@ export default {
             ],
         },
         {
-            uiType: "textbox",
+            type: "textbox",
             alias: "password",
             label: "密碼",
             icon: "lock",
-            type: "password",
+            showType: "password",
             value: "",
             placeholder: "請輸入密碼",
             help: "需輸入6-20碼英文小寫及數字",
             isValid: null,
-            disabled: false,
             error: "",
             tests: [
                 {
                     testType: "length",
                     props: {
-                        minlen: 4,
+                        minlen: 6,
                         maxlen: 20,
                     },
-                    error: "請輸入4-20個字元",
+                    error: "需輸入6-20個字元",
                 },
                 {
                     testType: "reg",
                     test: /^[a-z0-9]+$/,
-                    error: "請輸入英文小寫及數字",
+                    error: "需輸入英文小寫及數字",
                 },
             ],
         },
         {
-            uiType: "textbox",
+            type: "textbox",
             alias: "confirmPass",
             label: "確認密碼",
             icon: "lock",
-            type: "password",
+            showType: "password",
             value: "",
             placeholder: "請確認密碼",
-            help: "需輸入6-20碼英文小寫及數字與密碼相符",
+            help: "需與密碼相符",
             isValid: null,
-            disabled: false,
             error: "",
             tests: [
-                {
-                    testType: "length",
-                    props: {
-                        minlen: 0,
-                    },
-                    error: "此欄位必填",
-                },
                 {
                     testType: "confirmPas",
                     error: "需與密碼相符",
@@ -82,7 +73,7 @@ export default {
             ],
         },
         {
-            uiType: "textbox",
+            type: "textbox",
             alias: "name",
             label: "姓名",
             icon: "face",
@@ -90,31 +81,22 @@ export default {
             placeholder: "請輸入姓名",
             help: "需輸入姓名，不可輸入數字、空白及特殊符號",
             isValid: null,
-            disabled: false,
             error: "",
             tests: [
                 {
-                    testType: "length",
-                    props: {
-                        minlen: 0,
-                    },
-                    error: "此欄位必填",
-                },
-                {
                     testType: "reg",
                     test: /^[a-zA-Z\u4E00-\u9FA5]+$/,
-                    error: "請輸入英文小寫及數字",
+                    error: "必填，不許輸入數字及特殊符號",
                 },
             ],
         },
         {
-            uiType: "select",
+            type: "select",
             alias: "gender",
             label: "性別",
             icon: "transgender",
             value: "",
             isValid: true,
-            disabled: false,
             error: "",
             option: [
                 {
@@ -133,7 +115,7 @@ export default {
             tests: [],
         },
         {
-            uiType: "textbox",
+            type: "textbox",
             alias: "mail",
             label: "信箱",
             icon: "mail",
@@ -141,20 +123,15 @@ export default {
             placeholder: "請輸入信箱",
             help: "選填，請輸入有效信箱",
             isValid: true,
-            disabled: false,
             error: "",
             tests: [
                 {
-                    testType: "length",
-                    props: {
-                        minlen: 0,
-                    },
-                    error: "此欄位必填",
+                    testType: "nolength",
                 },
                 {
                     testType: "reg",
-                    test: /^[a-zA-Z\u4E00-\u9FA5]+$/,
-                    error: "請輸入英文小寫及數字",
+                    test: /^\w+((-\w+)|(\.\w+))*@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z]+$/,
+                    error: "請輸入正確的信箱",
                 },
             ],
         },

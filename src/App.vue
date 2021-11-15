@@ -4,22 +4,22 @@
             <template v-for="form in forms">
                 <!-- textbox -->
                 <ui-textbox
-                    v-if="form.uiType == 'textbox'"
+                    v-if="form.type == 'textbox'"
                     :key="form.alias"
                     :label="form.label"
                     :icon="form.icon"
                     :placeholder="form.placeholder"
                     :help="form.help"
                     :error="form.error"
+                    :type="form.showType"
                     :invalid="form.isValid === false"
                     @input="validForm(form.alias, $event)"
                     :value="form.value"
-                    :type="form.type"
-                    :disabled="form.disabled"
+                    :disabled="submitted"
                 ></ui-textbox>
                 <!-- select -->
                 <ui-select
-                    v-else-if="form.uiType == 'select'"
+                    v-else-if="form.type == 'select'"
                     :key="form.alias"
                     :label="form.label"
                     :icon="form.icon"
@@ -27,10 +27,10 @@
                     :options="form.option"
                     @input="validSelect(form.alias, $event)"
                     :value="form.value"
-                    :disabled="form.disabled"
+                    :disabled="submitted"
                 ></ui-select>
             </template>
-            <ui-button color="green" @click="submit(allValid)">
+            <ui-button color="green" @click.prevent="submit(forms)">
                 送出
             </ui-button>
         </div>
@@ -48,7 +48,7 @@
 </template>
 
 <script>
-import { mapState, mapGetters, mapActions } from "vuex";
+import { mapState, mapActions } from "vuex";
 export default {
     name: "App",
     data() {
@@ -57,33 +57,20 @@ export default {
         };
     },
     computed: {
-        ...mapState([
-            "forms",
-            // "account",
-            // "password",
-            // "confirmPass",
-            // "name",
-            // "gender",
-            // "genderOption",
-            // "email",
-        ]),
-        // 所有的有效判斷結果
-        ...mapGetters(["allValid"]),
+        ...mapState(["forms"]),
     },
     methods: {
         ...mapActions(["setForm"]),
         validForm(alias, value) {
-            const aliasData = this.forms.find((item) => item.alias === alias);
-            // console.log(aliasData);
-            // console.log(value);
-            // 先入值
+            const aliasData = this.forms.find((item) => item.alias == alias);
             this.setForm({
                 alias: alias,
                 valid: true,
                 value: value,
             });
+            //先驗證
             aliasData.tests.forEach((element) => {
-                if (element.testType === "length") {
+                if (element.testType == "length") {
                     //長度驗證
                     if (
                         value.length > element.props.maxlen ||
@@ -96,7 +83,7 @@ export default {
                             value: value,
                         });
                     }
-                } else if (element.testType === "reg") {
+                } else if (element.testType == "reg") {
                     //正則驗證
                     const doTest = new RegExp(element.test, "i").test(value);
                     if (!doTest) {
@@ -108,109 +95,68 @@ export default {
                         });
                     }
                 }
-                //     // 確認密碼驗證
-                //     if (element.testType === "confirmPas") {
-                //         const passwordValue = this.forms.find(
-                //             (item) => item.alias === "password"
-                //         );
-                //         console.log(passwordValue);
-                //     }
+                // 密碼修改又需驗證
+                if (aliasData.alias === "password") {
+                    // console.log(aliasData.value);
+                    const confirmData = this.forms.find(
+                        (item) => item.alias == "confirmPass"
+                    );
+                    // console.log(confirmData.value);
+                    if (aliasData.value !== confirmData.value) {
+                        this.setForm({
+                            alias: confirmData.alias,
+                            valid: false,
+                            error: confirmData.error,
+                            value: confirmData.value,
+                        });
+                    }
+                }
+
+                // 確認密碼驗證
+                if (element.testType === "confirmPas") {
+                    const passwordData = this.forms.find(
+                        (item) => item.alias === "password"
+                    );
+                    // console.log(passwordData.value);
+                    if (value !== passwordData.value || value.length <= 0) {
+                        this.setForm({
+                            alias: alias,
+                            valid: false,
+                            error: element.error,
+                            value: value,
+                        });
+                    }
+                }
+                //當信箱不輸入也可為true
+                if (aliasData.alias === "mail") {
+                    if (aliasData.value.length === 0) {
+                        this.setForm({
+                            alias: alias,
+                            valid: true,
+                            value: value,
+                        });
+                    }
+                }
             });
         },
         validSelect(alias, value) {
-            console.log(alias);
-            console.log(value);
+            this.setForm({
+                alias: alias,
+                value: value,
+            });
         },
-        // onAccountInput(value) {
-        //   let payload = { account: { value, result: null } };
-        //   this.setAll(payload);
-        //   // 判斷長度及有無輸入
-        //   if (value.length > 20 || value.length < 4) {
-        //     let payload = { account: { value, result: false } };
-        //     this.setAll(payload);
-        //     return;
-        //   }
-        //   // 判斷正則英文與數字
-        //   if (/^[a-z0-9]+$/.test(value)) {
-        //     let payload = { account: { value, result: true } };
-        //     this.setAll(payload);
-        //   } else {
-        //     let payload = { account: { value, result: false } };
-        //     this.setAll(payload);
-        //   }
-        // },
-        // onPasswordInput(value) {
-        //   let payload = { method: "password", value, result: null };
-        //   this.setAll(payload);
-        //   // 判斷有重新修改密碼後
-        //   if (value !== this.confirmPass.text) {
-        //     let payload = { method: "password", value, result: false };
-        //     this.setAll(payload);
-        //   }
-        //   // 判斷長度及有無輸入
-        //   if (value.length > 20 || value.length < 6) {
-        //     let payload = { method: "password", value, result: false };
-        //     this.setAll(payload);
-        //     return;
-        //   }
-        //   // 判斷正則英文與數字
-        //   if (/^[a-z0-9]+$/.test(value)) {
-        //     let payload = { method: "password", value, result: true };
-        //     this.setAll(payload);
-        //   } else {
-        //     let payload = { method: "password", value, result: false };
-        //     this.setAll(payload);
-        //   }
-        // },
-        // onConfirmPassInput(value) {
-        //   this.setConfirmText(value);
-        //   // 與密碼相符發action
-        //   if (value === this.password.text) {
-        //     this.setValidConfirmPass(true);
-        //   } else {
-        //     this.setValidConfirmPass(false);
-        //   }
-        //   // 確認有無輸入
-        //   if (value.length === 0) {
-        //     this.setValidConfirmPass(false);
-        //     return;
-        //   }
-        // },
-        // validName(value) {
-        //   this.setNameText(value);
-        //   // 確認有無輸入
-        //   if (value.length === 0) {
-        //     this.setValidName(false);
-        //     return;
-        //   }
-        //   if (/^[a-zA-Z\u4E00-\u9FA5]+$/.test(value)) {
-        //     this.setValidName(true);
-        //   } else {
-        //     this.setValidName(false);
-        //   }
-        // },
-        // changeGender(genderRes) {
-        //   this.setGender(genderRes);
-        // },
-        // validMail(value) {
-        //   this.setMailText(value);
-        //   // 不輸入也可
-        //   if (value.length === 0) {
-        //     this.setValidMail(true);
-        //     return;
-        //   }
-        //   // 驗證mail
-        //   let emailRule =
-        //     /^\w+((-\w+)|(\.\w+))*@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z]+$/;
-        //   if (emailRule.test(value)) {
-        //     this.setValidMail(true);
-        //   } else {
-        //     this.setValidMail(false);
-        //   }
-        // },
         submit(value) {
-            // console.log("allValid:" + value);
-            this.submitted = value;
+            this.forms.forEach((item) => {
+                this.validForm(item.alias, item.value);
+            });
+            const inValids = this.forms.filter((item) => item.isValid != true); // array
+            console.log(inValids.length);
+            console.log(value);
+            // 全部驗證過為空陣列
+            if (inValids.length === 0) {
+                this.submitted = true;
+                // this.setForm({ disabled: true });
+            }
         },
     },
 };
